@@ -1,35 +1,44 @@
-import csv
-import math
-import json
-import sys
+from csv import reader
+from math import sqrt
+from json import dumps
+from sys import argv
 
-# Загрузка данных из csv файла
-def load_file(filename):
+def load_file(filename) -> list:
+    """
+    Чтение csv файла в двухмерный список
+    """
     with open(filename, newline='') as csvfile:
-        reader = csv.reader(csvfile, delimiter=',', quotechar='|')
-        next(reader)    #skip first row
-        return [[item for item in row[1:]] for row in reader]
+        rdr = reader(csvfile, delimiter=',', quotechar='|')
+        next(rdr)
+        return [[item for item in row[1:]] for row in rdr]
 
-# Подсчет метрики сходства для двух кортежей
 def sim(u, v) -> float:
+    """
+    Подсчет метрики сходства для двух кортежей
+    """
     nominator = denominator1 = denominator2 = 0
     for i in range(len(v)):
         if u[i] != -1 and v[i] != -1:
             nominator += v[i] * u[i]
             denominator1 += v[i] ** 2
             denominator2 += u[i] ** 2
-    return round(nominator / math.sqrt(denominator1) / math.sqrt(denominator2), 3)
+    return nominator / sqrt(denominator1) / sqrt(denominator2)
 
-# Подсчет среднего арифметического кортежа (исключая -1)
 def avg(u) -> float:
+    """
+    Подсчет среднего арифметического кортежа (исключая -1)
+    """
     i = sum = 0
     for item in u:
         if item != -1:
             sum += item
             i += 1
-    return round(sum / i, 3)
+    return sum / i
 
 def RecSys(user_id = None, K = 7, min_mark = 3) -> dict:
+    """
+    Подсчет всех оценок и рекомендаций, или при указании user_id только для данного пользователя
+    """
     # Чтение данных из файлов
     context_day = load_file("context_day.csv")
     context_place = load_file("context_place.csv")
@@ -59,7 +68,7 @@ def RecSys(user_id = None, K = 7, min_mark = 3) -> dict:
                     if data[v][i] != -1:
                         nominator += sims[v][u] * (data[v][i] - avgs[v])
                         denominator += abs(sims[v][u])
-                        if count < K:
+                        if count < K-1:
                             count += 1
                         else: break
                 if not (u+1 in mrks):
@@ -79,19 +88,21 @@ def RecSys(user_id = None, K = 7, min_mark = 3) -> dict:
                     break
         
     if user_id:
-        return {"marks": mrks.popitem()[1], "recomedtation": rec.popitem()[1] }
+        mrks = mrks.popitem()[1]
+        rec = rec.popitem()[1]
+        return { "user": user_id,  "1": mrks, "2": { rec: mrks[rec] } }
     else:
-        return {"marks": mrks, "recomedtations": rec } 
+        return { "marks": mrks, "recomedtations": rec } 
 
 if __name__ == '__main__':
-    if len(sys.argv) == 1:
+    if len(argv) == 1:
         res = RecSys()
         with open("all_results.json", "w") as f:
-            f.write(json.dumps( res, indent=4))
-    elif len(sys.argv) == 2 and int(sys.argv[1]) > 0:
-        user_id = int(sys.argv[1])
+            f.write(dumps( res, indent=4))
+    elif len(argv) == 2 and int(argv[1]) > 0:
+        user_id = int(argv[1])
         res = RecSys(user_id)
         with open("User_{}.json".format(user_id), "w") as f:
-            f.write(json.dumps( res, indent=4))
+            f.write(dumps( res, indent=4))
     else:
         print("Error.")
