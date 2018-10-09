@@ -35,7 +35,7 @@ def avg(u) -> float:
             i += 1
     return sum / i
 
-def RecSys(user_id = None, K = 7, min_mark = 3) -> dict:
+def RecSys(user_id = None, K = 7) -> dict:
     """
     Подсчет всех оценок и рекомендаций, или при указании user_id только для данного пользователя
     """
@@ -70,10 +70,11 @@ def RecSys(user_id = None, K = 7, min_mark = 3) -> dict:
                         denominator += abs(sims[v][u])
                         if count < K-1:
                             count += 1
-                        else: break
+                        else: 
+                            break
                 if not (u+1 in mrks):
                     mrks[u+1] = {}
-                mrks[u+1]["movie " + str(i+1)]= round(avgs[u] + nominator / denominator, 3)
+                mrks[u+1]["movie " + str(i+1)] = round(avgs[u] + nominator / denominator, 3)
     
         # Для расчета рекомендации - перебираем наиболее схожих пользователей с выбранным
         for v in sims[u].keys():
@@ -81,9 +82,9 @@ def RecSys(user_id = None, K = 7, min_mark = 3) -> dict:
             # Перебираем фильмыы
             for i in range(len(data[u])):
                 # Находим фильм который пользователь не видел (не стоит оценка)
-                # а схожий пользователь видел дома в выходные и поставил оценку > min_mark
+                # а схожий пользователь видел дома в выходные и поставил оценку > чем в среднем 
                 if data[u][i] == -1 and context_place[v][i] == " h" and \
-                (context_day[v][i] == " Thu" or context_day[v][i] == " Sun") and data[v][i] > min_mark:
+                (context_day[v][i] == " Thu" or context_day[v][i] == " Sun") and data[v][i] > avgs[v]:
                     rec[u+1] =  "movie " + str(i+1)
                     break
         
@@ -91,18 +92,10 @@ def RecSys(user_id = None, K = 7, min_mark = 3) -> dict:
         mrks = mrks.popitem()[1]
         rec = rec.popitem()[1]
         return { "user": user_id,  "1": mrks, "2": { rec: mrks[rec] } }
-    else:
+    else: 
         return { "marks": mrks, "recomedtations": rec } 
 
 if __name__ == '__main__':
-    if len(argv) == 1:
-        res = RecSys()
-        with open("all_results.json", "w") as f:
-            f.write(dumps( res, indent=4))
-    elif len(argv) == 2 and int(argv[1]) > 0:
-        user_id = int(argv[1])
-        res = RecSys(user_id)
-        with open("User_{}.json".format(user_id), "w") as f:
-            f.write(dumps( res, indent=4))
-    else:
-        print("Error.")
+    user_id = None if len(argv) == 1 else int(argv[1])
+    res = RecSys(user_id)
+    print(dumps( res, indent=4))
