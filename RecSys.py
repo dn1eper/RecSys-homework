@@ -84,7 +84,7 @@ def RecSys(user_id = None, K = 7) -> dict:
                 # Находим фильм который пользователь не видел (не стоит оценка)
                 # а схожий пользователь видел дома в выходные и поставил оценку > чем в среднем 
                 if data[u][i] == -1 and context_place[v][i] == " h" and \
-                (context_day[v][i] == " Thu" or context_day[v][i] == " Sun") and data[v][i] > avgs[v]:
+                (context_day[v][i] == " Sat" or context_day[v][i] == " Sun") and data[v][i] > avgs[v]:
                     rec[u+1] =  "movie " + str(i+1)
                     break
         
