@@ -22,11 +22,7 @@ def other_director_films(film):
     """
     sparql.setQuery(query % film)
     sparql.setReturnFormat(JSON)
-    return sparql.query().convert()
-
-    
-if __name__ == "__main__":
-    results = other_director_films("Forrest Gump")
+    results = sparql.query().convert()
     out = []
     for result in results["results"]["bindings"]:
         out.append({ 
@@ -34,4 +30,4 @@ if __name__ == "__main__":
             "label": result["filmLabel"]["value"]
         })
 
-    print(dumps( out, indent=4))
+    return out

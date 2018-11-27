@@ -2,6 +2,7 @@ from csv import reader
 from math import sqrt
 from json import dumps
 from sys import argv
+from other_director_films import other_director_films
 
 def load_file(filename) -> list:
     """
@@ -74,7 +75,7 @@ def RecSys(user_id = None, K = 7) -> dict:
                             break
                 if not (u+1 in mrks):
                     mrks[u+1] = {}
-                mrks[u+1]["movie " + str(i+1)] = round(avgs[u] + nominator / denominator, 3)
+                mrks[u+1]["Movie " + str(i+1)] = round(avgs[u] + nominator / denominator, 3)
     
         # Для расчета рекомендации - перебираем наиболее схожих пользователей с выбранным
         for v in sims[u].keys():
@@ -85,15 +86,26 @@ def RecSys(user_id = None, K = 7) -> dict:
                 # а схожий пользователь видел дома в выходные и поставил оценку > чем в среднем 
                 if data[u][i] == -1 and context_place[v][i] == " h" and \
                 (context_day[v][i] == " Sat" or context_day[v][i] == " Sun") and data[v][i] > avgs[v]:
-                    rec[u+1] =  "movie " + str(i+1)
+                    rec[u+1] =  "Movie " + str(i+1)
                     break
         
     if user_id:
         mrks = mrks.popitem()[1]
         rec = rec.popitem()[1]
-        return { "user": user_id,  "1": mrks, "2": { rec: mrks[rec] } }
+        return { 
+            "user": user_id, 
+            "1": mrks,
+            "2": { get_movie_name(rec): mrks[rec] },
+            "3": other_director_films(get_movie_name(rec))
+        }
     else: 
         return { "marks": mrks, "recomedtations": rec } 
+
+def get_movie_name(film) -> str:
+    movie_names = load_file("movie_names.csv")
+    for movie in movie_names:
+        if movie[0].lstrip() == film:
+            return movie[1].lstrip()
 
 if __name__ == '__main__':
     user_id = None if len(argv) == 1 else int(argv[1])
